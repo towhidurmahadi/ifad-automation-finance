@@ -7,12 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node
+      
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24' # লেটেস্ট ভার্সন
+
       - name: Install Puppeteer
         run: npm install puppeteer
+
       - name: Execute Automation
         run: |
           node -e "
@@ -26,43 +29,42 @@ jobs:
             await page.setViewport({ width: 1280, height: 3000 });
             
             console.log('লিঙ্ক লোড হচ্ছে...');
-            await page.goto('https://ifad.org', { 
-              waitUntil: 'networkidle2',
-              timeout: 60000 
-            });
-            
-            await new Promise(r => setTimeout(r, 10000));
+            try {
+              await page.goto('https://ifad.org', { 
+                waitUntil: 'networkidle2',
+                timeout: 90000 
+              });
+              
+              await new Promise(r => setTimeout(r, 15000));
 
-            console.log('স্ক্রল করা হচ্ছে...');
-            await page.evaluate(async () => {
-              window.scrollTo(0, document.body.scrollHeight);
-            });
-            await new Promise(r => setTimeout(r, 5000));
+              console.log('স্ক্রল করা হচ্ছে...');
+              await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+              await new Promise(r => setTimeout(r, 5000));
 
-            console.log('নাম লেখা হচ্ছে...');
-            const inputSelector = 'input[type=\"text\"]';
-            await page.waitForSelector(inputSelector, { timeout: 30000 });
-            await page.type(inputSelector, 'MD Towhidur Rahman Mahadi', { delay: 100 });
-            
-            console.log('বাটন খোঁজা হচ্ছে...');
-            await page.evaluate(() => {
-              const buttons = Array.from(document.querySelectorAll('button'));
-              const target = buttons.find(b => b.innerText.toLowerCase().includes('print certificate'));
-              if (target) {
-                target.scrollIntoView();
-                target.click();
-              } else {
-                throw new Error('Button not found');
-              }
-            });
-            
-            console.log('পিডিএফ তৈরি হচ্ছে...');
-            await new Promise(r => setTimeout(r, 15000));
-            await page.pdf({ path: 'Mahadi_IFAD_Certificate.pdf', format: 'A4', printBackground: true });
-            
-            await browser.close();
-            console.log('কাজ শেষ!');
+              console.log('নাম লেখা হচ্ছে...');
+              const inputSelector = 'input[type=\"text\"]';
+              await page.waitForSelector(inputSelector, { timeout: 30000 });
+              await page.type(inputSelector, 'MD Towhidur Rahman Mahadi');
+              
+              console.log('বাটন ক্লিক করা হচ্ছে...');
+              await page.evaluate(() => {
+                const buttons = Array.from(document.querySelectorAll('button'));
+                const target = buttons.find(b => b.innerText.toLowerCase().includes('print certificate'));
+                if (target) target.click();
+                else throw new Error('Button not found');
+              });
+              
+              await new Promise(r => setTimeout(r, 15000));
+              await page.pdf({ path: 'Mahadi_IFAD_Certificate.pdf', format: 'A4', printBackground: true });
+              console.log('PDF তৈরি হয়েছে!');
+            } catch (err) {
+              console.error('Error occurred:', err.message);
+              process.exit(1);
+            } finally {
+              await browser.close();
+            }
           })();"
+
       - name: Save Certificate
         uses: actions/upload-artifact@v4
         with:
