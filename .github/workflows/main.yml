@@ -6,11 +6,11 @@ jobs:
   print_cert:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       - name: Install Puppeteer
         run: npm install puppeteer
       - name: Execute Automation
@@ -22,7 +22,7 @@ jobs:
             const page = await browser.newPage();
             await page.setViewport({ width: 1280, height: 2000 });
             await page.goto('https://ifad.org', { waitUntil: 'networkidle2' });
-            await new Promise(r => setTimeout(r, 5000));
+            await new Promise(r => setTimeout(r, 7000));
             await page.evaluate(async () => {
               await new Promise((resolve) => {
                 let totalHeight = 0; let distance = 100;
@@ -46,7 +46,7 @@ jobs:
             await browser.close();
           })();"
       - name: Save Certificate
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Download_Certificate_Here
           path: Mahadi_IFAD_Certificate.pdf
